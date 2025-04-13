@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const Candidate = require("../models/Candidate"); // ✅ no curly braces
+const Candidate = require("../models/Candidate");
 
-// POST route to add a candidate
+// Create a candidate
 router.post("/", async (req, res) => {
   try {
     const candidate = new Candidate(req.body);
@@ -15,6 +15,7 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Get candidates with search, pagination, and filters
 router.get("/", async (req, res) => {
   try {
     const {
@@ -22,13 +23,14 @@ router.get("/", async (req, res) => {
       page = 1,
       limit = 10,
       gender,
-      experience,
       skills,
+      minExperience,
+      maxExperience,
     } = req.query;
 
     const query = {};
 
-    // Search by name, phone or email
+    // Search by name, phone, or email
     if (search) {
       query.$or = [
         { name: new RegExp(search, "i") },
@@ -42,19 +44,24 @@ router.get("/", async (req, res) => {
       query.gender = gender;
     }
 
-    // Filter by experience
-    if (experience) {
-      query.experience = experience;
-    }
-
     // Filter by skills
     if (skills) {
-      const skillArray = skills.split(",");
+      const skillArray = skills.split(",").map((s) => s.trim());
       query.skills = { $all: skillArray };
     }
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    // Filter by experience
+    if (minExperience !== undefined || maxExperience !== undefined) {
+      query.experience = {};
+      if (minExperience !== undefined && !isNaN(minExperience)) {
+        query.experience.$gte = parseInt(minExperience);
+      }
+      if (maxExperience !== undefined && !isNaN(maxExperience)) {
+        query.experience.$lte = parseInt(maxExperience);
+      }
+    }
 
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     const candidates = await Candidate.find(query)
       .skip(skip)
       .limit(parseInt(limit));
