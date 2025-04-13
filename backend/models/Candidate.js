@@ -6,11 +6,7 @@ const candidateSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     gender: { type: String, enum: ["Male", "Female", "Other"], required: true },
-    experience: {
-      type: String,
-      enum: ["1 Year", "2 Years", "3 Years", "4 Years", "5 Years", "6+ Years"],
-      required: true,
-    },
+    experience: Number,
     skills: { type: [String], required: true },
   },
   { timestamps: true }
